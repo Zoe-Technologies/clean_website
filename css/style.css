@@ -3187,7 +3187,6 @@ main menu
     display: none;
   }
   .mil-main-menu ul li.mil-current > a:after {
-    content: "(Current)";
     margin-left: 1rem;
     color: rgba(135, 146, 164, 0.6);
     margin-right: 0;

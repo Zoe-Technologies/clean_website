@@ -199,7 +199,7 @@ function setupDiscountForm() {
                 console.log("📊 Response status:", response.status);
                 console.log("📝 Response text:", response.text);
                 
-                alert("Success! Your discount code has been sent to your email.");
+                alert("Success! Your discount request has been sent to us we would get back to you soon.");
                 form.reset();
             })
             .catch(function(error) {

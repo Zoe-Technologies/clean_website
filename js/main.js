@@ -339,7 +339,24 @@ function setupDiscountForm() {
     });
 }
 
+emailjs.init("Loou1rzwRThVVBP-i");
 
+  document.getElementById("contact-form").addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent form from refreshing the page
+
+    // Send the email using EmailJS
+    emailjs.send("hostinger_smtp", "template_7k3awsx", {
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      phone: document.getElementById("phone").value,
+      message: document.getElementById("message").value,
+    })
+    .then(response => {
+      alert("Message sent successfully!");
+      document.getElementById("contact-form").reset(); // Clear form fields
+    })
+    .catch(error => alert("Error sending message."));
+  });
 
     /* -------------------------------------------
     

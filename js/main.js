@@ -283,7 +283,7 @@ function setupDiscountForm() {
         
         // Validate inputs
         if (!formData.userName || !formData.userEmail || !formData.userPhone) {
-            createNotification("Incomplete Information", "Please fill in all fields to receive your discount code.", "error");
+            createNotification("Incomplete Information", "Please fill in all fields to request for your discount.", "error");
             elements.submitBtn.disabled = false;
             elements.submitBtn.innerHTML = originalButtonContent;
             return;
@@ -313,8 +313,8 @@ function setupDiscountForm() {
                 
                 // Show success notification
                 createNotification(
-                    "Discount Code Sent!",
-                    `Congratulations ${formData.userName}! Your 50% OFF discount code has been sent to ${formData.userEmail}. Check your inbox in the next few minutes.`,
+                    "Discount Code Request Sent!",
+                    `Congratulations ${formData.userName}! Your 50% OFF discount code would be sent to ${formData.userEmail}. Check your inbox in a couple of minutes as we would reach out to you soon.`,
                     "success"
                 );
                 

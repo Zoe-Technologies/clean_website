@@ -88,77 +88,171 @@ document.addEventListener("DOMContentLoaded", function () {
     Email form
     
     ------------------------------------------- */
-   // Initialize EmailJS with your public key
-// Make sure this is loaded after the EmailJS script
-(function() {
-    // Replace with your actual public key
-    emailjs.init("Loou1rzwRThVVBP-i");
-})();
+  // ===== EmailJS Debug Implementation =====
+// This version includes extensive debugging and error trapping
 
-document.addEventListener("DOMContentLoaded", function () {
+// Wait for the EmailJS library to load
+window.onload = function() {
+    console.log("🔍 Window loaded - Starting EmailJS setup");
+    
+    // Check if EmailJS is available
+    if (typeof emailjs === 'undefined') {
+        console.error("❌ ERROR: EmailJS library is not loaded!");
+        alert("The email service library is not loaded. Please check your internet connection or try again later.");
+        return;
+    }
+    
+    try {
+        // Initialize EmailJS with your public key
+        console.log("🔄 Initializing EmailJS...");
+        emailjs.init("Loou1rzwRThVVBP-i");
+        console.log("✅ EmailJS initialized successfully");
+        
+        // Setup form after EmailJS is initialized
+        setupDiscountForm();
+    } catch (error) {
+        console.error("❌ EmailJS initialization failed:", error);
+        alert("Failed to initialize the email service. Please try again later.");
+    }
+};
+
+function setupDiscountForm() {
+    console.log("🔄 Setting up discount form...");
+    
     // Get the form element
     const form = document.getElementById("discount-form");
     
-    if (form) {
-        console.log("Form found, attaching event listener");
-        
-        form.addEventListener("submit", function (event) {
-            event.preventDefault(); // Prevent form submission
-            
-            // Disable the submit button to prevent multiple submissions
-            const submitBtn = document.getElementById("submit-btn");
-            if (submitBtn) submitBtn.disabled = true;
-            
-            // Get input values with trimming
-            const userName = document.getElementById("user-name-3").value.trim();
-            const userEmail = document.getElementById("user-email-3").value.trim();
-            const userPhone = document.getElementById("user-phone-3").value.trim();
-            
-            // Validation
-            if (!userName || !userEmail || !userPhone) {
-                alert("Please fill in all fields.");
-                if (submitBtn) submitBtn.disabled = false;
-                return;
-            }
-            
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(userEmail)) {
-                alert("Please enter a valid email address.");
-                if (submitBtn) submitBtn.disabled = false;
-                return;
-            }
-            
-            // Prepare template parameters
-            const templateParams = {
-                user_name: userName,
-                user_email: userEmail,
-                user_phone: userPhone,
-                discount_code: "50% OFF FIRST PURCHASE"
-            };
-            
-            console.log("Sending email with params:", templateParams);
-            
-            // Send email using EmailJS
-            emailjs.send("hostinger_smtp", "template_gcc85pw", templateParams)
-                .then(function(response) {
-                    console.log("SUCCESS:", response);
-                    alert("Success! Your discount code has been sent to your email.");
-                    form.reset();
-                })
-                .catch(function(error) {
-                    console.error("FAILED:", error);
-                    alert("Failed to send email. Please try again later.");
-                })
-                .finally(function() {
-                    // Re-enable the submit button
-                    if (submitBtn) submitBtn.disabled = false;
-                });
-        });
-    } else {
-        console.error("Form with ID 'discount-form' not found. DOM might not be fully loaded.");
+    if (!form) {
+        console.error("❌ Form with ID 'discount-form' not found!");
+        return;
     }
-});
+    
+    console.log("✅ Form found:", form);
+    
+    // Verify all required elements exist
+    const elements = {
+        nameInput: document.getElementById("user-name-3"),
+        emailInput: document.getElementById("user-email-3"),
+        phoneInput: document.getElementById("user-phone-3"),
+        submitBtn: document.getElementById("submit-btn")
+    };
+    
+    // Check if all elements exist
+    let missingElements = [];
+    for (const [key, element] of Object.entries(elements)) {
+        if (!element) {
+            missingElements.push(key);
+            console.error(`❌ Element '${key}' not found!`);
+        }
+    }
+    
+    if (missingElements.length > 0) {
+        console.error(`❌ Missing form elements: ${missingElements.join(", ")}`);
+        return;
+    }
+    
+    console.log("✅ All form elements found");
+    
+    // Add form submission handler
+    form.addEventListener("submit", function(event) {
+        console.log("🔄 Form submit event triggered");
+        event.preventDefault();
+        
+        // Disable the submit button
+        elements.submitBtn.disabled = true;
+        elements.submitBtn.innerHTML = "Sending...";
+        
+        // Get input values
+        const formData = {
+            userName: elements.nameInput.value.trim(),
+            userEmail: elements.emailInput.value.trim(),
+            userPhone: elements.phoneInput.value.trim()
+        };
+        
+        console.log("📝 Form data collected:", formData);
+        
+        // Validate inputs
+        if (!formData.userName || !formData.userEmail || !formData.userPhone) {
+            console.error("❌ Validation error: Empty fields");
+            alert("Please fill in all fields.");
+            elements.submitBtn.disabled = false;
+            elements.submitBtn.innerHTML = "Get it now<i class='far fa-arrow-right mil-bg-m-1 mil-a-1'></i>";
+            return;
+        }
+        
+        // Prepare template parameters
+        const templateParams = {
+            user_name: formData.userName,
+            user_email: formData.userEmail,
+            user_phone: formData.userPhone,
+            discount_code: "50% OFF FIRST PURCHASE"
+        };
+        
+        console.log("🔄 Sending email with params:", templateParams);
+        console.log("🔄 Using service ID:", "hostinger_smtp");
+        console.log("🔄 Using template ID:", "template_gcc85pw");
+        
+        // Send email with verbose logging and better error handling
+        emailjs.send("hostinger_smtp", "template_gcc85pw", templateParams)
+            .then(function(response) {
+                console.log("✅ Email sent successfully!", response);
+                console.log("📊 Response status:", response.status);
+                console.log("📝 Response text:", response.text);
+                
+                alert("Success! Your discount code has been sent to your email.");
+                form.reset();
+            })
+            .catch(function(error) {
+                console.error("❌ Failed to send email:", error);
+                
+                if (error.status) {
+                    console.error("📊 Error status:", error.status);
+                }
+                
+                if (error.text) {
+                    console.error("📝 Error text:", error.text);
+                }
+                
+                // Provide more specific error messages based on error type
+                if (error.status === 400) {
+                    alert("There was an error with your request. Please check your information and try again.");
+                } else if (error.status === 401 || error.status === 403) {
+                    alert("Authorization error. Please contact support.");
+                } else if (error.status >= 500) {
+                    alert("Server error. Please try again later.");
+                } else {
+                    alert("Failed to send email. Please check your internet connection and try again.");
+                }
+            })
+            .finally(function() {
+                // Re-enable the submit button
+                elements.submitBtn.disabled = false;
+                elements.submitBtn.innerHTML = "Get it now<i class='far fa-arrow-right mil-bg-m-1 mil-a-1'></i>";
+                console.log("🔄 Form reset to initial state");
+            });
+    });
+    
+    console.log("✅ Form setup complete and ready for submissions");
+}
+
+// Add a test function that can be called from the console for debugging
+window.testEmailJS = function() {
+    console.log("🔍 Testing EmailJS connection...");
+    
+    // Send a test email
+    emailjs.send("hostinger_smtp", "template_gcc85pw", {
+        user_name: "Test User",
+        user_email: "test@example.com",
+        user_phone: "+61123456789",
+        discount_code: "TEST DISCOUNT"
+    })
+    .then(function(response) {
+        console.log("✅ Test email sent successfully!", response);
+    })
+    .catch(function(error) {
+        console.error("❌ Test email failed:", error);
+    });
+};
 
     /* -------------------------------------------
     

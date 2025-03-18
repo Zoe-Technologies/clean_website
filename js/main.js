@@ -88,46 +88,160 @@ document.addEventListener("DOMContentLoaded", function () {
     Email form
     
     ------------------------------------------- */
-  // ===== EmailJS Debug Implementation =====
-// This version includes extensive debugging and error trapping
-
-// Wait for the EmailJS library to load
+// ===== EmailJS Implementation with Elegant Notification =====
+// Wait for the window to load
 window.onload = function() {
-    console.log("🔍 Window loaded - Starting EmailJS setup");
+    console.log("Window loaded - Starting EmailJS setup");
     
     // Check if EmailJS is available
     if (typeof emailjs === 'undefined') {
-        console.error("❌ ERROR: EmailJS library is not loaded!");
-        alert("The email service library is not loaded. Please check your internet connection or try again later.");
+        console.error("EmailJS library is not loaded!");
+        createNotification("Error", "The email service is not available. Please try again later.", "error");
         return;
     }
     
     try {
         // Initialize EmailJS with your public key
-        console.log("🔄 Initializing EmailJS...");
         emailjs.init("Loou1rzwRThVVBP-i");
-        console.log("✅ EmailJS initialized successfully");
+        console.log("EmailJS initialized successfully");
         
         // Setup form after EmailJS is initialized
         setupDiscountForm();
+        
+        // Create notification container if it doesn't exist
+        if (!document.getElementById('custom-notification-container')) {
+            createNotificationContainer();
+        }
     } catch (error) {
-        console.error("❌ EmailJS initialization failed:", error);
-        alert("Failed to initialize the email service. Please try again later.");
+        console.error("EmailJS initialization failed:", error);
+        createNotification("Error", "Failed to initialize the email service. Please try again later.", "error");
     }
 };
 
-function setupDiscountForm() {
-    console.log("🔄 Setting up discount form...");
+// Create notification container
+function createNotificationContainer() {
+    const container = document.createElement('div');
+    container.id = 'custom-notification-container';
+    container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+    `;
+    document.body.appendChild(container);
+}
+
+// Create and show notification
+function createNotification(title, message, type = 'success') {
+    const container = document.getElementById('custom-notification-container');
+    if (!container) return;
     
+    // Clear any existing notifications
+    container.innerHTML = '';
+    
+    // Set background color based on type
+    let bgColor, iconClass, primaryColor;
+    if (type === 'success') {
+        bgColor = '#ffffff';
+        iconClass = '🎉';
+        primaryColor = '#4CAF50';
+    } else if (type === 'error') {
+        bgColor = '#ffffff';
+        iconClass = '⚠️';
+        primaryColor = '#F44336';
+    } else {
+        bgColor = '#ffffff';
+        iconClass = 'ℹ️';
+        primaryColor = '#2196F3';
+    }
+    
+    // Create notification content
+    const notificationContent = `
+        <div class="notification-box" style="
+            background-color: ${bgColor};
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: fadeInUp 0.4s ease-out forwards;
+        ">
+            <div class="notification-icon" style="
+                font-size: 48px;
+                margin-bottom: 20px;
+            ">${iconClass}</div>
+            <h3 style="
+                font-size: 24px;
+                margin-bottom: 15px;
+                color: #333;
+            ">${title}</h3>
+            <p style="
+                font-size: 16px;
+                line-height: 1.5;
+                margin-bottom: 25px;
+                color: #666;
+            ">${message}</p>
+            <button class="close-notification" style="
+                background-color: ${primaryColor};
+                color: white;
+                border: none;
+                border-radius: 30px;
+                padding: 12px 30px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            ">Got it!</button>
+        </div>
+    `;
+    
+    // Add notification to container
+    container.innerHTML = notificationContent;
+    
+    // Show container
+    container.style.display = 'flex';
+    
+    // Add close button event listener
+    const closeButton = container.querySelector('.close-notification');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            container.style.display = 'none';
+        });
+    }
+    
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function setupDiscountForm() {
     // Get the form element
     const form = document.getElementById("discount-form");
     
     if (!form) {
-        console.error("❌ Form with ID 'discount-form' not found!");
+        console.error("Form with ID 'discount-form' not found!");
         return;
     }
-    
-    console.log("✅ Form found:", form);
     
     // Verify all required elements exist
     const elements = {
@@ -142,25 +256,23 @@ function setupDiscountForm() {
     for (const [key, element] of Object.entries(elements)) {
         if (!element) {
             missingElements.push(key);
-            console.error(`❌ Element '${key}' not found!`);
+            console.error(`Element '${key}' not found!`);
         }
     }
     
     if (missingElements.length > 0) {
-        console.error(`❌ Missing form elements: ${missingElements.join(", ")}`);
+        console.error(`Missing form elements: ${missingElements.join(", ")}`);
         return;
     }
     
-    console.log("✅ All form elements found");
-    
     // Add form submission handler
     form.addEventListener("submit", function(event) {
-        console.log("🔄 Form submit event triggered");
         event.preventDefault();
         
-        // Disable the submit button
+        // Disable the submit button and show loading state
         elements.submitBtn.disabled = true;
-        elements.submitBtn.innerHTML = "Sending...";
+        const originalButtonContent = elements.submitBtn.innerHTML;
+        elements.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
         
         // Get input values
         const formData = {
@@ -169,14 +281,20 @@ function setupDiscountForm() {
             userPhone: elements.phoneInput.value.trim()
         };
         
-        console.log("📝 Form data collected:", formData);
-        
         // Validate inputs
         if (!formData.userName || !formData.userEmail || !formData.userPhone) {
-            console.error("❌ Validation error: Empty fields");
-            alert("Please fill in all fields.");
+            createNotification("Incomplete Information", "Please fill in all fields to receive your discount code.", "error");
             elements.submitBtn.disabled = false;
-            elements.submitBtn.innerHTML = "Get it now<i class='far fa-arrow-right mil-bg-m-1 mil-a-1'></i>";
+            elements.submitBtn.innerHTML = originalButtonContent;
+            return;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.userEmail)) {
+            createNotification("Invalid Email", "Please enter a valid email address to receive your discount.", "error");
+            elements.submitBtn.disabled = false;
+            elements.submitBtn.innerHTML = originalButtonContent;
             return;
         }
         
@@ -188,71 +306,38 @@ function setupDiscountForm() {
             discount_code: "50% OFF FIRST PURCHASE"
         };
         
-        console.log("🔄 Sending email with params:", templateParams);
-        console.log("🔄 Using service ID:", "hostinger_smtp");
-        console.log("🔄 Using template ID:", "template_gcc85pw");
-        
-        // Send email with verbose logging and better error handling
+        // Send email
         emailjs.send("hostinger_smtp", "template_gcc85pw", templateParams)
             .then(function(response) {
-                console.log("✅ Email sent successfully!", response);
-                console.log("📊 Response status:", response.status);
-                console.log("📝 Response text:", response.text);
+                console.log("Email sent successfully!", response);
                 
-                alert("Success! Your discount request has been sent to us we would get back to you soon.");
+                // Show success notification
+                createNotification(
+                    "Discount Code Sent!",
+                    `Congratulations ${formData.userName}! Your 50% OFF discount code has been sent to ${formData.userEmail}. Check your inbox in the next few minutes.`,
+                    "success"
+                );
+                
+                // Reset form
                 form.reset();
             })
             .catch(function(error) {
-                console.error("❌ Failed to send email:", error);
+                console.error("Failed to send email:", error);
                 
-                if (error.status) {
-                    console.error("📊 Error status:", error.status);
-                }
-                
-                if (error.text) {
-                    console.error("📝 Error text:", error.text);
-                }
-                
-                // Provide more specific error messages based on error type
-                if (error.status === 400) {
-                    alert("There was an error with your request. Please check your information and try again.");
-                } else if (error.status === 401 || error.status === 403) {
-                    alert("Authorization error. Please contact support.");
-                } else if (error.status >= 500) {
-                    alert("Server error. Please try again later.");
-                } else {
-                    alert("Failed to send email. Please check your internet connection and try again.");
-                }
+                // Show error notification
+                createNotification(
+                    "Something Went Wrong",
+                    "We couldn't send your discount code. Please try again or contact our support team.",
+                    "error"
+                );
             })
             .finally(function() {
-                // Re-enable the submit button
+                // Reset button state
                 elements.submitBtn.disabled = false;
-                elements.submitBtn.innerHTML = "Get it now<i class='far fa-arrow-right mil-bg-m-1 mil-a-1'></i>";
-                console.log("🔄 Form reset to initial state");
+                elements.submitBtn.innerHTML = originalButtonContent;
             });
     });
-    
-    console.log("✅ Form setup complete and ready for submissions");
 }
-
-// Add a test function that can be called from the console for debugging
-window.testEmailJS = function() {
-    console.log("🔍 Testing EmailJS connection...");
-    
-    // Send a test email
-    emailjs.send("hostinger_smtp", "template_gcc85pw", {
-        user_name: "Test User",
-        user_email: "test@example.com",
-        user_phone: "+61123456789",
-        discount_code: "TEST DISCOUNT"
-    })
-    .then(function(response) {
-        console.log("✅ Test email sent successfully!", response);
-    })
-    .catch(function(error) {
-        console.error("❌ Test email failed:", error);
-    });
-};
 
     /* -------------------------------------------
     

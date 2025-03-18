@@ -339,6 +339,207 @@ function setupDiscountForm() {
     });
 }
 
+// Make sure this is executed after the page is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM fully loaded, setting up callback form");
+    
+    // Initialize EmailJS
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init("Loou1rzwRThVVBP-i");
+        console.log("EmailJS initialized");
+    } else {
+        console.error("EmailJS library not found! Make sure it's included in your HTML.");
+        return;
+    }
+    
+    // Create notification container if needed
+    if (!document.getElementById('custom-notification-container')) {
+        createNotificationContainer();
+    }
+    
+    // Get the callback form directly by ID
+    const callbackForm = document.getElementById("callback-form");
+    
+    if (!callbackForm) {
+        console.error("Callback form with ID 'callback-form' not found!");
+        return;
+    }
+    
+    console.log("Callback form found:", callbackForm);
+    
+    // Get form elements
+    const nameInput = document.getElementById("user-name-2");
+    const phoneInput = document.getElementById("user-phone-2");
+    const submitBtn = callbackForm.querySelector("button[type='submit']");
+    
+    if (!nameInput || !phoneInput || !submitBtn) {
+        console.error("Missing form elements:", {
+            nameInput: !!nameInput,
+            phoneInput: !!phoneInput,
+            submitBtn: !!submitBtn
+        });
+        return;
+    }
+    
+    console.log("All form elements found");
+    
+    // Listen for form submission
+    callbackForm.addEventListener("submit", function(event) {
+        console.log("Form submission detected");
+        event.preventDefault();
+        
+        // Disable button and show loading state
+        submitBtn.disabled = true;
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Get and validate input values
+        const userName = nameInput.value.trim();
+        const userPhone = phoneInput.value.trim();
+        
+        console.log("Form data:", { userName, userPhone });
+        
+        if (!userName || !userPhone) {
+            console.error("Validation failed: empty fields");
+            createNotification("Incomplete Information", "Please provide both your name and phone number so we can call you back.", "error");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+            return;
+        }
+        
+        // Prepare template parameters
+        const templateParams = {
+            user_name: userName,
+            user_phone: userPhone,
+            request_type: "Callback Request",
+            timestamp: new Date().toLocaleString()
+        };
+        
+        console.log("Sending email with params:", templateParams);
+        
+        // Send email
+        emailjs.send("hostinger_smtp", "template_o6ojvs8", templateParams)
+            .then(function(response) {
+                console.log("SUCCESS:", response);
+                createNotification(
+                    "Request Received!",
+                    `Thank you ${userName}! We've received your callback request and will contact you at ${userPhone} as soon as possible.`,
+                    "success"
+                );
+                callbackForm.reset();
+            })
+            .catch(function(error) {
+                console.error("FAILED:", error);
+                createNotification(
+                    "Request Failed",
+                    "We couldn't process your callback request. Please try again later or contact us directly.",
+                    "error"
+                );
+            })
+            .finally(function() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalContent;
+            });
+    });
+});
+
+// Create notification container
+function createNotificationContainer() {
+    const container = document.createElement('div');
+    container.id = 'custom-notification-container';
+    container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+    `;
+    document.body.appendChild(container);
+}
+
+// Create notification
+function createNotification(title, message, type = 'success') {
+    const container = document.getElementById('custom-notification-container');
+    if (!container) return;
+    
+    // Clear any existing notifications
+    container.innerHTML = '';
+    
+    // Set styles based on type
+    let iconClass, primaryColor;
+    if (type === 'success') {
+        iconClass = '🎉';
+        primaryColor = '#4CAF50';
+    } else if (type === 'error') {
+        iconClass = '⚠️';
+        primaryColor = '#F44336';
+    } else {
+        iconClass = 'ℹ️';
+        primaryColor = '#2196F3';
+    }
+    
+    // Create notification content
+    const notificationContent = `
+        <div class="notification-box" style="
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: fadeInUp 0.4s ease-out forwards;
+        ">
+            <div class="notification-icon" style="
+                font-size: 48px;
+                margin-bottom: 20px;
+            ">${iconClass}</div>
+            <h3 style="
+                font-size: 24px;
+                margin-bottom: 15px;
+                color: #333;
+            ">${title}</h3>
+            <p style="
+                font-size: 16px;
+                line-height: 1.5;
+                margin-bottom: 25px;
+                color: #666;
+            ">${message}</p>
+            <button class="close-notification" style="
+                background-color: ${primaryColor};
+                color: white;
+                border: none;
+                border-radius: 30px;
+                padding: 12px 30px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            ">Got it!</button>
+        </div>
+    `;
+    
+    // Add notification to container
+    container.innerHTML = notificationContent;
+    
+    // Show container
+    container.style.display = 'flex';
+    
+    // Add close button event listener
+    const closeButton = container.querySelector('.close-notification');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            container.style.display = 'none';
+        });
+    }
+}
+
     /* -------------------------------------------
     
     menu

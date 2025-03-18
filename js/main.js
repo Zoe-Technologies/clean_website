@@ -1,11 +1,5 @@
 /* -------------------------------------------
 
-Name:         Cleandy
-Version:      1.0
-Developer:    Nazar Miller (millerDigitalDesign)
-Portfolio:    https://themeforest.net/user/millerdigitaldesign/portfolio?ref=MillerDigitalDesign
-
-p.s. I am available for Freelance hire (UI design, web development). email: miller.themes@gmail.com
 
 ------------------------------------------- */
 
@@ -87,6 +81,84 @@ document.addEventListener("DOMContentLoaded", function () {
         lenis.raf(time);
         requestAnimationFrame(raf);
     }
+
+    
+    /* -------------------------------------------
+    
+    Email form
+    
+    ------------------------------------------- */
+   // Initialize EmailJS with your public key
+// Make sure this is loaded after the EmailJS script
+(function() {
+    // Replace with your actual public key
+    emailjs.init("Loou1rzwRThVVBP-i");
+})();
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Get the form element
+    const form = document.getElementById("discount-form");
+    
+    if (form) {
+        console.log("Form found, attaching event listener");
+        
+        form.addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent form submission
+            
+            // Disable the submit button to prevent multiple submissions
+            const submitBtn = document.getElementById("submit-btn");
+            if (submitBtn) submitBtn.disabled = true;
+            
+            // Get input values with trimming
+            const userName = document.getElementById("user-name-3").value.trim();
+            const userEmail = document.getElementById("user-email-3").value.trim();
+            const userPhone = document.getElementById("user-phone-3").value.trim();
+            
+            // Validation
+            if (!userName || !userEmail || !userPhone) {
+                alert("Please fill in all fields.");
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(userEmail)) {
+                alert("Please enter a valid email address.");
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+            
+            // Prepare template parameters
+            const templateParams = {
+                user_name: userName,
+                user_email: userEmail,
+                user_phone: userPhone,
+                discount_code: "50% OFF FIRST PURCHASE"
+            };
+            
+            console.log("Sending email with params:", templateParams);
+            
+            // Send email using EmailJS
+            emailjs.send("hostinger_smtp", "template_gcc85pw", templateParams)
+                .then(function(response) {
+                    console.log("SUCCESS:", response);
+                    alert("Success! Your discount code has been sent to your email.");
+                    form.reset();
+                })
+                .catch(function(error) {
+                    console.error("FAILED:", error);
+                    alert("Failed to send email. Please try again later.");
+                })
+                .finally(function() {
+                    // Re-enable the submit button
+                    if (submitBtn) submitBtn.disabled = false;
+                });
+        });
+    } else {
+        console.error("Form with ID 'discount-form' not found. DOM might not be fully loaded.");
+    }
+});
 
     /* -------------------------------------------
     
@@ -484,19 +556,19 @@ document.addEventListener("DOMContentLoaded", function () {
             var cleave = new Cleave(phoneInput, {
                 delimiters: ['(', ')', '-', '-'],
                 blocks: [3, 3, 3, 2, 2],
-                prefix: '+38',
+                prefix: '+61',
                 numericOnly: true,
                 noImmediatePrefix: true,
             });
 
             phoneInput.addEventListener('focus', function () {
                 if (phoneInput.value === '') {
-                    phoneInput.value = '+38';
+                    phoneInput.value = '+61';
                 }
             });
 
             phoneInput.addEventListener('blur', function () {
-                if (phoneInput.value === '+38' || phoneInput.value === '+38(') {
+                if (phoneInput.value === '+61' || phoneInput.value === '+61(') {
                     phoneInput.value = '';
                 }
             });
